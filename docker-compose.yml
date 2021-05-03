@@ -1,0 +1,61 @@
+version: "3.9"
+
+networks:
+  local:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/24"
+
+  internet:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.0.0/24"
+  
+services:
+# App that makes a request
+  app:
+    build:
+      context: .
+      dockerfile: App.Dockerfile
+      args:
+        HOST: "172.16.0.50"
+        PORT: 8000
+        URI: content.txt
+        PROXY: "10.0.0.20"
+        SLEEP: "2s"
+    networks:
+      local:
+        ipv4_address: 10.0.0.10      
+      
+# Proxies
+  first_proxy:
+    image: haproxy:2.3
+    volumes:
+      - ./first.haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      local:
+        ipv4_address: 10.0.0.20
+
+  second_proxy:
+    image: haproxy:2.3
+    volumes:
+      - ./second.haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      internet:
+        ipv4_address: 172.16.0.30
+      local:
+        ipv4_address: 10.0.0.30
+
+# An http server
+  http_server:
+    build:
+      context: .
+      dockerfile: Server.Dockerfile
+      args:
+        RESPONSE: "Hello\ there!"
+        PORT: 8000
+    networks:
+      internet:
+        ipv4_address: 172.16.0.50
