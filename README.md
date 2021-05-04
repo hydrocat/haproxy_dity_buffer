@@ -5,7 +5,7 @@ Server gets the following response:
 
 ## Expectation
 
-Server *should* the following response:
+Server *should* receive the following response:
 ```GET /content.txt HTTP/1.1```
 
 I suspect that when copying the uri from one buffer to the other, 
